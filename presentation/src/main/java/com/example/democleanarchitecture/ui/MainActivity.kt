@@ -4,6 +4,7 @@ import android.app.SearchManager
 import android.content.Context
 import android.os.Bundle
 import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.ViewModelProvider
@@ -13,14 +14,17 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.democleanarchitecture.R
 import com.example.democleanarchitecture.model.RepoItem
 import com.example.democleanarchitecture.util.ItemCLickListener
+import com.example.democleanarchitecture.util.ItemMenuClickListener
 import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import javax.inject.Inject
 
-class MainActivity : DaggerAppCompatActivity(), ItemCLickListener {
+class MainActivity : DaggerAppCompatActivity(), ItemCLickListener, ItemMenuClickListener {
     private lateinit var viewModel: MainViewModel
     private lateinit var searchView: SearchView
-    private var mainAdapter = MainAdapter(this)
+    private var mainAdapter = MainAdapter(this, this)
+    private var isOnline = true
+
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
 
@@ -48,17 +52,29 @@ class MainActivity : DaggerAppCompatActivity(), ItemCLickListener {
         Toast.makeText(this, user.name, Toast.LENGTH_SHORT).show()
     }
 
+    override fun onItemMenuClick(user: RepoItem) {
+        viewModel.insertUserToLocal(user)
+    }
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.app_menu, menu)
         val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
         searchView = menu!!.findItem(R.id.action_search).actionView as SearchView
         searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
         searchView.maxWidth = Int.MAX_VALUE
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String): Boolean {
                 Toast.makeText(applicationContext, "search $query", Toast.LENGTH_SHORT).show()
-                viewModel.getUserBySearch(query)
-                return true
+                return when (isOnline) {
+                    true -> {
+                        viewModel.getUserBySearch(query)
+                        true
+                    }
+                    false -> {
+                        viewModel.getUserLocalBySearch(query)
+                        true
+                    }
+                }
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
@@ -74,7 +90,32 @@ class MainActivity : DaggerAppCompatActivity(), ItemCLickListener {
         return super.onCreateOptionsMenu(menu)
     }
 
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.action_online -> {
+                viewModel.getUsers()
+                isOnline = true
+                return true
+            }
+            R.id.action_offline -> {
+                viewModel.getUsersLocal()
+                isOnline = false
+                return true
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
     override fun onBackPressed() {
-        viewModel.getUsers()
+        when (isOnline) {
+            true -> {
+                viewModel.getUsers()
+                return
+            }
+            false -> {
+                viewModel.getUsersLocal()
+                return
+            }
+        }
     }
 }
