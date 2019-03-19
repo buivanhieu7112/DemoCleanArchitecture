@@ -10,9 +10,12 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.democleanarchitecture.R
 import com.example.democleanarchitecture.model.RepoItem
+import com.example.democleanarchitecture.util.ItemCLickListener
 import kotlinx.android.synthetic.main.adapter_user.view.*
 
-class MainAdapter : ListAdapter<RepoItem, MainAdapter.UserViewHolder>(MainAdapter.UserDiffCallBack()) {
+class MainAdapter(
+    private val itemCLickListener: ItemCLickListener
+) : ListAdapter<RepoItem, MainAdapter.UserViewHolder>(MainAdapter.UserDiffCallBack()) {
     class UserDiffCallBack : DiffUtil.ItemCallback<RepoItem>() {
         override fun areItemsTheSame(oldItem: RepoItem, newItem: RepoItem): Boolean {
             return oldItem.id == newItem.id
@@ -29,15 +32,17 @@ class MainAdapter : ListAdapter<RepoItem, MainAdapter.UserViewHolder>(MainAdapte
     }
 
     override fun onBindViewHolder(holder: UserViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        holder.bind(getItem(position),itemCLickListener)
     }
 
     class UserViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        fun bind(repoItem: RepoItem) {
+        fun bind(repoItem: RepoItem, itemCLickListener: ItemCLickListener) {
             itemView.textViewUserName.text = repoItem.name
             Glide.with(itemView.imageViewAvatar.context).load(repoItem.avatar)
                 .apply(RequestOptions().circleCrop().placeholder(R.drawable.ic_launcher_foreground))
                 .into(itemView.imageViewAvatar)
+
+            itemView.setOnClickListener { itemCLickListener.onItemClicked(repoItem) }
         }
     }
 }
