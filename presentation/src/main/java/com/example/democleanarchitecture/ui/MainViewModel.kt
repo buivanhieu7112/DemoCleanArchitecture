@@ -23,14 +23,22 @@ class MainViewModel @Inject constructor(
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .map { response ->
-                response.map {
-                    itemMapper.mapToPresentation(it)
-                }.toMutableList()
+                response.map { itemMapper.mapToPresentation(it) }.toMutableList()
             }
             .subscribe({ response ->
                 mainAdapter.submitList(response)
-                Log.d("DATA_SUCCESS", response.size.toString())
-            }, { error -> error.localizedMessage })
+                Log.d("DATA_SUCCESS", response.size.toString()) }, { error -> error.localizedMessage })
+        launchDisposable(disposable)
+    }
+
+    fun getUserBySearch(name: String) {
+        val disposable = getUsersUseCase.getUserBySearch(name)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .map { response ->
+                response.map { itemMapper.mapToPresentation(it) }.toMutableList()
+            }
+            .subscribe({ response -> mainAdapter.submitList(response) }, { error -> error.localizedMessage })
         launchDisposable(disposable)
     }
 }

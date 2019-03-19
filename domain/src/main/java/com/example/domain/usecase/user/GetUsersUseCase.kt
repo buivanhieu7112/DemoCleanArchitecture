@@ -11,4 +11,8 @@ open class GetUsersUseCase @Inject constructor(
     fun getUsers(): Flowable<MutableList<User>> {
         return userRepository.getUsers()
     }
+
+    fun getUserBySearch(name : String): Flowable<MutableList<User>> {
+        return userRepository.getUserBySearch(name)
+    }
 }

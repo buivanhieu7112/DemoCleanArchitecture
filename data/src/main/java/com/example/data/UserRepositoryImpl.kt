@@ -22,6 +22,10 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override fun getUserBySearch(name: String): Flowable<MutableList<User>> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return apiService.getUserBySearch(name).map { response ->
+            response.items.map { mapper.mapToDomain(it) }.toMutableList()
+        }.doOnError {
+            Throwable("Not found!")
+        }
     }
 }
