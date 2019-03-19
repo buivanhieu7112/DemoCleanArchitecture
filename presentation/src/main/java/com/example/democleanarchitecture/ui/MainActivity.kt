@@ -3,12 +3,16 @@ package com.example.democleanarchitecture.ui
 import android.os.Bundle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.democleanarchitecture.R
 import dagger.android.support.DaggerAppCompatActivity
+import kotlinx.android.synthetic.main.activity_main.*
 import javax.inject.Inject
 
 class MainActivity : DaggerAppCompatActivity() {
     private lateinit var viewModel: MainViewModel
+    private var mainAdapter = MainAdapter()
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
 
@@ -16,10 +20,18 @@ class MainActivity : DaggerAppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         initData()
+        setupView()
     }
 
     private fun initData() {
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(MainViewModel::class.java)
         viewModel.getUsers()
+        viewModel.getAdapter(mainAdapter)
+    }
+
+    private fun setupView() {
+        recyclerView.adapter = mainAdapter
+        val dividerItemDecoration = DividerItemDecoration(recyclerView.context, LinearLayoutManager.VERTICAL)
+        recyclerView.addItemDecoration(dividerItemDecoration)
     }
 }
