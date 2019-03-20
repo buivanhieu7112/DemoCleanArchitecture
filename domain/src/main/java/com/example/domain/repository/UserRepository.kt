@@ -15,5 +15,5 @@ interface UserRepository {
 
     fun getUserLocalBySearch(name: String): Flowable<MutableList<User>>
 
-    fun deleteUser()
+    fun deleteUser(): Completable
 }

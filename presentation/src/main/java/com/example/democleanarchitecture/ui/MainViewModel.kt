@@ -4,19 +4,21 @@ import android.util.Log
 import com.example.democleanarchitecture.base.BaseViewModel
 import com.example.democleanarchitecture.model.RepoItem
 import com.example.democleanarchitecture.model.RepoItemMapper
-import com.example.domain.usecase.user.DatabaseUseCase
-import com.example.domain.usecase.user.GetUsersUseCase
-import io.reactivex.Completable
+import com.example.democleanarchitecture.rx.AppSchedulerProvider
+import com.example.domain.usecase.user.*
 import io.reactivex.CompletableObserver
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
 class MainViewModel @Inject constructor(
-    private val getUsersUseCase: GetUsersUseCase,
-    private val databaseUseCase: DatabaseUseCase,
-    private val itemMapper: RepoItemMapper
+    private val findUserLocalUseCase: FindUserLocalUseCase,
+    private val findUserOnlineUseCase: FindUserOnlineUseCase,
+    private val saveUserUseCase: SaveUserUseCase,
+    private val deleteAllUserLocalUseCase: DeleteAllUserLocalUseCase,
+    private val showListUserLocalUseCase: ShowListUserLocalUseCase,
+    private val showListUserOnlineUseCase: ShowListUserOnlineUseCase,
+    private val itemMapper: RepoItemMapper,
+    private val schedulerProvider: AppSchedulerProvider
 ) : BaseViewModel() {
     private lateinit var mainAdapter: MainAdapter
 
@@ -25,13 +27,12 @@ class MainViewModel @Inject constructor(
     }
 
     fun getUsers() {
-        val disposable = getUsersUseCase.getUsers()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+        val disposable = showListUserOnlineUseCase.createObservable()
+            .subscribeOn(schedulerProvider.io())
+            .observeOn(schedulerProvider.ui())
             .map { response ->
                 response.map { itemMapper.mapToPresentation(it) }.toMutableList()
-            }
-            .subscribe({ response ->
+            }.subscribe({ response ->
                 mainAdapter.submitList(response)
                 Log.d("DATA_SUCCESS", response.size.toString())
             }, { error -> error.localizedMessage })
@@ -39,9 +40,9 @@ class MainViewModel @Inject constructor(
     }
 
     fun getUserBySearch(name: String) {
-        val disposable = getUsersUseCase.getUserBySearch(name)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+        val disposable = findUserOnlineUseCase.createObservable(FindUserOnlineUseCase.Params(name = name))
+            .subscribeOn(schedulerProvider.io())
+            .observeOn(schedulerProvider.ui())
             .map { response ->
                 response.map { itemMapper.mapToPresentation(it) }.toMutableList()
             }
@@ -50,9 +51,9 @@ class MainViewModel @Inject constructor(
     }
 
     fun insertUserToLocal(user: RepoItem) {
-        databaseUseCase.insertUser(itemMapper.mapToDoMain(user))
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+        saveUserUseCase.createObservable(SaveUserUseCase.Params(user = itemMapper.mapToDoMain(user)))
+            .subscribeOn(schedulerProvider.io())
+            .observeOn(schedulerProvider.ui())
             .subscribe(object : CompletableObserver {
                 override fun onComplete() {
                     Log.d("DATABASE", "INSERT_SUCCESS")
@@ -69,32 +70,40 @@ class MainViewModel @Inject constructor(
     }
 
     fun getUsersLocal() {
-        val disposable = databaseUseCase.getUsersLocal()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+        val disposable = showListUserLocalUseCase.createObservable()
+            .subscribeOn(schedulerProvider.io())
+            .observeOn(schedulerProvider.ui())
             .map { response -> response.map { itemMapper.mapToPresentation(it) } }
             .subscribe({ response -> mainAdapter.submitList(response) }, { error -> error.localizedMessage })
         launchDisposable(disposable)
     }
 
     fun getUserLocalBySearch(name: String) {
-        val disposable = databaseUseCase.getUserLocalBySearch(name)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+        val disposable = findUserLocalUseCase.createObservable(FindUserLocalUseCase.Params(name = name))
+            .subscribeOn(schedulerProvider.io())
+            .observeOn(schedulerProvider.ui())
             .map { response -> response.map { itemMapper.mapToPresentation(it) } }
             .subscribe({ response -> mainAdapter.submitList(response) }, { error -> error.localizedMessage })
         launchDisposable(disposable)
     }
 
-
     fun deleteAllUser() {
-        val disposable = Completable.create { emitter ->
-            databaseUseCase.deleteUser()
-            emitter.onComplete()
-        }
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeOn(Schedulers.io())
-            .subscribe()
-        launchDisposable(disposable)
+        deleteAllUserLocalUseCase.createObservable()
+            .subscribeOn(schedulerProvider.io())
+            .observeOn(schedulerProvider.ui())
+            .subscribe(
+                object : CompletableObserver {
+                    override fun onComplete() {
+                        Log.d("DATABASE", "DELETE_ALL_SUCCESS")
+                    }
+
+                    override fun onSubscribe(d: Disposable) {
+                        launchDisposable(d)
+                    }
+
+                    override fun onError(e: Throwable) {
+                        e.localizedMessage
+                    }
+                })
     }
 }

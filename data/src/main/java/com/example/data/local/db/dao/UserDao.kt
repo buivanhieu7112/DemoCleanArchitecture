@@ -20,5 +20,5 @@ interface UserDao {
     fun getUserBySearch(name: String): Flowable<MutableList<UserEntity>>
 
     @Query("DELETE FROM USER")
-    fun deleteAllUser()
+    fun deleteAllUser(): Completable
 }

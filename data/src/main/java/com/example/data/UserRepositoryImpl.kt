@@ -44,7 +44,7 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun deleteUser() {
-        appDatabase.userDao().deleteAllUser()
+    override fun deleteUser(): Completable {
+        return appDatabase.userDao().deleteAllUser()
     }
 }
