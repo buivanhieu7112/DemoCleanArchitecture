@@ -6,7 +6,7 @@ import com.example.domain.usecase.UseCase
 import io.reactivex.Completable
 import javax.inject.Inject
 
-class SaveUserUseCase @Inject constructor(
+open class SaveUserUseCase @Inject constructor(
     private val userRepository: UserRepository
 ) : UseCase<SaveUserUseCase.Params?, Completable>() {
     override fun createObservable(params: Params?): Completable {

@@ -7,6 +7,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -33,12 +34,12 @@ class MainActivity : DaggerAppCompatActivity(), ItemCLickListener, ItemMenuClick
         setContentView(R.layout.activity_main)
         initData()
         setupView()
+        subscribeUI()
     }
 
     private fun initData() {
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(MainViewModel::class.java)
         viewModel.getUsers()
-        viewModel.getAdapter(mainAdapter)
     }
 
     private fun setupView() {
@@ -46,6 +47,12 @@ class MainActivity : DaggerAppCompatActivity(), ItemCLickListener, ItemMenuClick
         recyclerView.adapter = mainAdapter
         val dividerItemDecoration = DividerItemDecoration(recyclerView.context, LinearLayoutManager.VERTICAL)
         recyclerView.addItemDecoration(dividerItemDecoration)
+    }
+
+    private fun subscribeUI() {
+        viewModel.data.observe(this, Observer {
+            mainAdapter.submitList(it)
+        })
     }
 
     override fun onItemClicked(user: RepoItem) {

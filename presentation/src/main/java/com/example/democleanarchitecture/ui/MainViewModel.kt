@@ -1,6 +1,7 @@
 package com.example.democleanarchitecture.ui
 
 import android.util.Log
+import androidx.lifecycle.MutableLiveData
 import com.example.democleanarchitecture.base.BaseViewModel
 import com.example.democleanarchitecture.model.RepoItem
 import com.example.democleanarchitecture.model.RepoItemMapper
@@ -20,11 +21,8 @@ class MainViewModel @Inject constructor(
     private val itemMapper: RepoItemMapper,
     private val schedulerProvider: AppSchedulerProvider
 ) : BaseViewModel() {
-    private lateinit var mainAdapter: MainAdapter
 
-    fun getAdapter(adapter: MainAdapter) {
-        mainAdapter = adapter
-    }
+    var data = MutableLiveData<MutableList<RepoItem>>()
 
     fun getUsers() {
         val disposable = showListUserOnlineUseCase.createObservable()
@@ -33,21 +31,25 @@ class MainViewModel @Inject constructor(
             .map { response ->
                 response.map { itemMapper.mapToPresentation(it) }.toMutableList()
             }.subscribe({ response ->
-                mainAdapter.submitList(response)
+                data.value = response
                 Log.d("DATA_SUCCESS", response.size.toString())
             }, { error -> error.localizedMessage })
         launchDisposable(disposable)
     }
 
     fun getUserBySearch(name: String) {
-        val disposable = findUserOnlineUseCase.createObservable(FindUserOnlineUseCase.Params(name = name))
+        launchDisposable(findUserOnlineUseCase.createObservable(FindUserOnlineUseCase.Params(name = name))
             .subscribeOn(schedulerProvider.io())
             .observeOn(schedulerProvider.ui())
             .map { response ->
                 response.map { itemMapper.mapToPresentation(it) }.toMutableList()
             }
-            .subscribe({ response -> mainAdapter.submitList(response) }, { error -> error.localizedMessage })
-        launchDisposable(disposable)
+            .subscribe({ response ->
+                data.value = response
+            }, { error ->
+                error.localizedMessage
+            })
+        )
     }
 
     fun insertUserToLocal(user: RepoItem) {
@@ -73,8 +75,10 @@ class MainViewModel @Inject constructor(
         val disposable = showListUserLocalUseCase.createObservable()
             .subscribeOn(schedulerProvider.io())
             .observeOn(schedulerProvider.ui())
-            .map { response -> response.map { itemMapper.mapToPresentation(it) } }
-            .subscribe({ response -> mainAdapter.submitList(response) }, { error -> error.localizedMessage })
+            .map { response -> response.map { itemMapper.mapToPresentation(it) }.toMutableList() }
+            .subscribe({ response ->
+                data.value = response
+            }, { error -> error.localizedMessage })
         launchDisposable(disposable)
     }
 
@@ -82,8 +86,12 @@ class MainViewModel @Inject constructor(
         val disposable = findUserLocalUseCase.createObservable(FindUserLocalUseCase.Params(name = name))
             .subscribeOn(schedulerProvider.io())
             .observeOn(schedulerProvider.ui())
-            .map { response -> response.map { itemMapper.mapToPresentation(it) } }
-            .subscribe({ response -> mainAdapter.submitList(response) }, { error -> error.localizedMessage })
+            .map { response ->
+                response.map { itemMapper.mapToPresentation(it) }.toMutableList()
+            }
+            .subscribe({ response ->
+                data.value = response
+            }, { error -> error.localizedMessage })
         launchDisposable(disposable)
     }
 

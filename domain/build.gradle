@@ -12,6 +12,8 @@ dependencies {
     implementation deps.dagger.android_support
 
     testImplementation deps.junit
+    testImplementation deps.mockito.core
+    testImplementation deps.mock_web_server
 }
 
 sourceCompatibility = "7"

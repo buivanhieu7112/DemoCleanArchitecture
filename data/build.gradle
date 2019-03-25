@@ -47,4 +47,8 @@ dependencies {
     implementation deps.room.runtime
     kapt deps.room.compiler
     implementation deps.room.rxjava2
+    testImplementation deps.robolectric.all
+    testImplementation deps.mockito.core
+    androidTestImplementation deps.mockito.core
+    testImplementation deps.mock_web_server
 }
