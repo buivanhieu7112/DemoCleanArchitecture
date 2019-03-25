@@ -22,6 +22,8 @@ class MainViewModel @Inject constructor(
 ) : BaseViewModel() {
     private lateinit var mainAdapter: MainAdapter
 
+    var data = mutableListOf<RepoItem>()
+
     fun getAdapter(adapter: MainAdapter) {
         mainAdapter = adapter
     }
@@ -34,6 +36,7 @@ class MainViewModel @Inject constructor(
                 response.map { itemMapper.mapToPresentation(it) }.toMutableList()
             }.subscribe({ response ->
                 mainAdapter.submitList(response)
+                data = response
                 Log.d("DATA_SUCCESS", response.size.toString())
             }, { error -> error.localizedMessage })
         launchDisposable(disposable)
@@ -46,7 +49,10 @@ class MainViewModel @Inject constructor(
             .map { response ->
                 response.map { itemMapper.mapToPresentation(it) }.toMutableList()
             }
-            .subscribe({ response -> mainAdapter.submitList(response) }, { error -> error.localizedMessage })
+            .subscribe({ response ->
+                mainAdapter.submitList(response)
+                data = response
+            }, { error -> error.localizedMessage })
         launchDisposable(disposable)
     }
 
@@ -82,8 +88,11 @@ class MainViewModel @Inject constructor(
         val disposable = findUserLocalUseCase.createObservable(FindUserLocalUseCase.Params(name = name))
             .subscribeOn(schedulerProvider.io())
             .observeOn(schedulerProvider.ui())
-            .map { response -> response.map { itemMapper.mapToPresentation(it) } }
-            .subscribe({ response -> mainAdapter.submitList(response) }, { error -> error.localizedMessage })
+            .map { response -> response.map { itemMapper.mapToPresentation(it) }.toMutableList() }
+            .subscribe({ response ->
+                mainAdapter.submitList(response)
+                data = response
+            }, { error -> error.localizedMessage })
         launchDisposable(disposable)
     }
 

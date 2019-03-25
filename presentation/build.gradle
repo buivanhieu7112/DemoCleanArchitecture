@@ -52,4 +52,8 @@ dependencies {
     implementation deps.room.rxjava2
     implementation deps.glide.runtime
     kapt deps.glide.compiler
+
+    testImplementation deps.mockito.core
+    testImplementation deps.mock_web_server
+    androidTestImplementation deps.mockito.core
 }

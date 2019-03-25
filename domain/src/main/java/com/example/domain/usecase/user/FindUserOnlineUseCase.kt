@@ -6,7 +6,7 @@ import com.example.domain.usecase.UseCase
 import io.reactivex.Flowable
 import javax.inject.Inject
 
-class FindUserOnlineUseCase @Inject constructor(
+open class FindUserOnlineUseCase @Inject constructor(
     private val userRepository: UserRepository
 ) : UseCase<FindUserOnlineUseCase.Params, Flowable<MutableList<User>>>() {
     override fun createObservable(params: Params?): Flowable<MutableList<User>> {

@@ -5,7 +5,7 @@ import com.example.domain.usecase.UseCase
 import io.reactivex.Completable
 import javax.inject.Inject
 
-class DeleteAllUserLocalUseCase @Inject constructor(
+open class DeleteAllUserLocalUseCase @Inject constructor(
     private val userRepository: UserRepository
 ) : UseCase<DeleteAllUserLocalUseCase.InputEmpty, Completable>() {
     override fun createObservable(params: InputEmpty?): Completable {
